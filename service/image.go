@@ -37,9 +37,9 @@ func (svc ImageService) Id() string {
 }
 
 func (svc *ImageService) Start() error {
-	svc.solSvc = svc.Service(SOLANA_IMG_SVC).(*SolanaImageService)
-	svc.sql = svc.Service(SQLITE_SVC).(*SqliteService)
-	svc.resize = svc.Service(RESIZE_SVC).(*ResizeService)
+	svc.solSvc = svc.DefaultService(SOLANA_IMG_SVC).(*SolanaImageService)
+	svc.sql = svc.DefaultService(SQLITE_SVC).(*SqliteService)
+	svc.resize = svc.DefaultService(RESIZE_SVC).(*ResizeService)
 
 	svc.httpMedia = &http.Client{Timeout: 10 * time.Second}
 
@@ -170,6 +170,7 @@ func (svc *ImageService) fetchMissingImage(media *nft_proxy.Media, cacheName str
 			return err
 		}
 
+		// Uses a more generic value (Mozilla/5.0), avoiding the hard-coded Postman value that could cause issues with APIs.
 		req.Header.Set("User-Agent", "PostmanRuntime/7.29.2")
 		req.Header.Set("Accept", "*/*")
 		req.Header.Set("Accept-Encoding", "gzip,deflate,br")

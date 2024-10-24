@@ -5,13 +5,15 @@ import (
 	"github.com/gagliardetto/solana-go"
 )
 
-type Protocol uint
+type Protocol uint8  // More specific size since we only need few values
 
 const (
-	PROTOCOL_LEGACY Protocol = iota
-	PROTOCOL_TOKEN22_MINT
-	PROTOCOL_LIBREPLEX
-	PROTOCOL_METAPLEX_CORE
+	// Right name convention
+    ProtocolLegacy Protocol = iota
+    ProtocolToken22Mint
+    ProtocolLibreplex
+    ProtocolMetaplexCore
+    maxProtocol // private constant for validation
 )
 
 type Metadata struct {
@@ -27,9 +29,28 @@ type Metadata struct {
 	IsMutable bool
 
 	// Collection
+	// Issues:
+	// Using pointers for optional fields can lead to nil pointer dereferences
+	// No validation for optional fields
+	// No documentation about nil behavior
+	
 	Collection *token_metadata.Collection `bin:"optional"`
 
-	Protocol Protocol `bin:"-"`
+
+	// Issues:
+
+	// No documentation explaining why Protocol is excluded from binary serialization
+	// Missing JSON tags for API compatibility
+	// No validation tags
+
+    Protocol Protocol `bin:"-" json:"protocol"`
+}
+
+
+type SellerFeeBasisPoints uint16
+
+func (s SellerFeeBasisPoints) Valid() bool {
+    return 0 <= s  && s <= 10000
 }
 
 type Data struct {
@@ -42,9 +63,15 @@ type Data struct {
 	// URI pointing to JSON representing the asset
 	Uri string
 
+	// Issues:
+
+	// No validation for SellerFeeBasisPoints range (0-10000)
+	// Using pointer to slice (unnecessary indirection)
+	// No field validation methods
+
 	// Royalty basis points that goes to creators in secondary sales (0-10000)
-	SellerFeeBasisPoints uint16
+	SellerFeeBasisPoints SellerFeeBasisPoints
 
 	// Array of creators, optional
-	Creators *[]token_metadata.Creator `bin:"optional"`
+    Creators []token_metadata.Creator `bin:"optional" json:"creators,omitempty"`
 }

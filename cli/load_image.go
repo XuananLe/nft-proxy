@@ -17,7 +17,7 @@ func init() {
 }
 
 func main() {
-
+	// Consider having a config object that holds all the enviroment variable
 	client := rpc.New(os.Getenv("RPC_URL"))
 	resp, err := client.GetAccountInfo(context.TODO(), solana.MustPublicKeyFromBase58("9FmQSV65qhKC4uDe1U2npGxAeMD7Ym2AQgBtkKyjKaax"))
 	if err != nil {

@@ -31,8 +31,8 @@ func (svc SolanaImageService) Id() string {
 func (svc *SolanaImageService) Start() error {
 	svc.http = &http.Client{Timeout: 5 * time.Second}
 
-	svc.sql = svc.Service(SQLITE_SVC).(*SqliteService)
-	svc.sol = svc.Service(SOLANA_SVC).(*SolanaService)
+	svc.sql = svc.DefaultService(SQLITE_SVC).(*SqliteService)
+	svc.sol = svc.DefaultService(SOLANA_SVC).(*SolanaService)
 	return nil
 }
 

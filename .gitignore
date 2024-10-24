@@ -16,7 +16,6 @@
 
 *.json
 .env
-.env.*
 
 nft_proxy.db
 

@@ -23,6 +23,7 @@ func main() {
 		metaWorkerCount:  3,
 		fileWorkerCount:  3,
 		mediaWorkerCount: 1,
+		// Using unbuffered channels  might lead to inefficient blocking if the production of items is slower than consumption
 		metaDataIn:       make(chan *token_metadata.Metadata),
 		fileDataIn:       make(chan *nft_proxy.NFTMetadataSimple),
 		mediaIn:          make(chan *nft_proxy.Media),
@@ -47,9 +48,15 @@ func main() {
 	//TODO Fetch Image
 	//TODO Resize Image 500x500
 	//TODO Fetch Media
+
+	// Consider Signaling all workers to finish (graceful shutdown) and to prevent goroutine leak
+	// close(l.metaDataIn)
+	// close(l.fileDataIn)
+	// close(l.mediaIn)
 }
 
 func (l *collectionLoader) spawnWorkers() {
+	// Consider add a wait group here to wait all the workers are spawned
 	for i := 0; i < l.metaWorkerCount; i++ {
 		go l.metaDataWorker()
 	}

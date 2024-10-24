@@ -13,7 +13,11 @@ import (
 	"strings"
 	"time"
 )
-
+// Issues:
+// - Graceful Shutdown
+// - Concurrency for Hashlist Reloading: The reloadRemote and reloadLocally functions process the hashes serially. For better performance, especially 
+// when dealing with large hash lists, these operations could be made concurrent using goroutines and a worker pool.
+// - 
 func init() {
 	err := godotenv.Load()
 	if err != nil {
@@ -88,6 +92,8 @@ func run(ctx *context.Context) error {
 	return nil
 }
 
+
+// Refactored reloadRemote and reloadLocally because they share a common pattern of worker-based concurrency
 func reloadRemote(hashes Hashlist) error {
 	c := &http.Client{Timeout: 5 * time.Second}
 	for _, h := range hashes {

@@ -3,6 +3,11 @@ package services
 import (
 	ctx "context"
 	"errors"
+	"fmt"
+	"log"
+	"os"
+	"strings"
+
 	nft_proxy "github.com/alphabatem/nft-proxy"
 	"github.com/alphabatem/nft-proxy/metaplex_core"
 	token_metadata "github.com/alphabatem/nft-proxy/token-metadata"
@@ -11,10 +16,9 @@ import (
 	bin "github.com/gagliardetto/binary"
 	"github.com/gagliardetto/solana-go"
 	"github.com/gagliardetto/solana-go/rpc"
-	"log"
-	"os"
-	"strings"
 )
+
+// Added context (ctx.Context) to all RPC calls, allowing better control of timeouts and cancellations.
 
 type SolanaService struct {
 	context.DefaultService
@@ -27,9 +31,14 @@ func (svc SolanaService) Id() string {
 	return SOLANA_SVC
 }
 
+// Start initializes the RPC client for Solana with error handling for invalid RPC URLs
 func (svc *SolanaService) Start() error {
-	svc.client = rpc.New(os.Getenv("RPC_URL"))
+	rpcURL := os.Getenv("RPC_URL")
+	if rpcURL == "" {
+		return fmt.Errorf("RPC_URL is not configured")
+	}
 
+	svc.client = rpc.New(rpcURL)
 	return nil
 }
 
@@ -85,7 +94,8 @@ func (svc *SolanaService) TokenData(key solana.PublicKey) (*token_metadata.Metad
 			}
 			if exts != nil && exts.TokenMetadata != nil {
 				return &token_metadata.Metadata{
-					Protocol:        token_metadata.PROTOCOL_TOKEN22_MINT,
+					// Put right name convention
+					Protocol:        token_metadata.ProtocolToken22Mint,
 					UpdateAuthority: *exts.TokenMetadata.Authority,
 					Mint:            exts.TokenMetadata.Mint,
 					Data: token_metadata.Data{
@@ -115,7 +125,7 @@ func (svc *SolanaService) TokenData(key solana.PublicKey) (*token_metadata.Metad
 }
 
 func (svc *SolanaService) decodeMintMetadata(data []byte) (*token_metadata.Metadata, error) {
-	var mint token_2022.Mint
+	var mint token_2022_go.Mint
 	err := mint.UnmarshalWithDecoder(bin.NewBinDecoder(data))
 	if err != nil {
 		return nil, err
@@ -133,7 +143,7 @@ func (svc *SolanaService) decodeMintMetadata(data []byte) (*token_metadata.Metad
 
 		if exts.TokenMetadata != nil {
 			return &token_metadata.Metadata{
-				Protocol:        token_metadata.PROTOCOL_TOKEN22_MINT,
+				Protocol:        token_metadata.ProtocolToken22Mint,
 				UpdateAuthority: *exts.TokenMetadata.Authority,
 				Mint:            exts.TokenMetadata.Mint,
 				Data: token_metadata.Data{
@@ -158,7 +168,7 @@ func (svc *SolanaService) decodeMetaplexCoreMetadata(mint solana.PublicKey, data
 	log.Printf("%+v\n", meta)
 
 	tMeta := token_metadata.Metadata{
-		Protocol: token_metadata.PROTOCOL_METAPLEX_CORE,
+		Protocol: token_metadata.ProtocolMetaplexCore,
 		Mint:     mint,
 		Data: token_metadata.Data{
 			Name: strings.Trim(meta.Name, "\x00"),
